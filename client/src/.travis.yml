@@ -1,0 +1,22 @@
+sudo: required
+services:
+    - docker
+
+before_install:
+    - docker build -t jhprescott/react-test -f ./client/Dockerfile.dev ./client
+
+scripts:
+    - docker run jhprescott/react-test npm test -- --coverage
+
+after_success:
+    - docker build -t jhprescott/multi-client ./client
+    - docker build -t jhprescott/multi-nginx ./nginx
+    - docker build -t jhprescott/multi-server ./server
+    - docker build -t jhprescott/multi-worker ./worker
+    # Login to the Docker CLI
+    - echo "$DOCKER_PASSWORD" | docker login -u "$DOCKER_ID" --password-stdin
+    # Take images and push them to Docker Hub
+    - docker push jhprescott/multi-client
+    - docker push jhprescott/multi-nginx
+    - docker push jhprescott/multi-server
+    - docker push jhprescott/multi-worker
